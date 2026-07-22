@@ -70,6 +70,24 @@ function DrawGrid(){
 
 DrawGrid();
 
+canvas.addEventListener("click",async (e) => {
+        if (!document.fullscreenElement) {
+        try {
+            // Request full screen specifically for the canvas
+            await canvas.requestFullscreen();
+            } catch (err) {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                }
+        } else {
+            // Exit full screen if it is already active
+            document.exitFullscreen();
+        }
+});
+
+function player(){
+
+};
+
 /*
 ctx.save();
 ctx.translate(2*unit.width,0);
