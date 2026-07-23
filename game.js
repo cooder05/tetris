@@ -67,23 +67,62 @@ function DrawGrid(){
     ctx.strokeStyle = "white";
     ctx.stroke();
 }
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+let block_X = 2;
+let block_Y = 0;
+let block_Speed = 1000;
+let block_Direction = 0;
+function draw_shape(x,y){
+    ctx.save();
+    ctx.translate(x*unit.width,y*unit.height);
+    ctx.fillStyle = L.color;
+    ctx.fill(L.shape);
+    ctx.restore();
+}
+
+
+async function drop(){
+    for (var j=0;j<5;j++){
+        for (var x=0;x<10;x++){
+            block_Y = x;
+            console.log("   drop");
+            await delay(block_Speed);
+        }
+    }
+}
+
+let PLAY = false;
+
+function toggleGame() {
+    PLAY = !PLAY;
+    if (PLAY) {
+        Game(); // Kickstart the loop only when turning ON
+    }
+}
 
 async function Game(){
-    for (var j=0;j<=2;j++){
-        for (var x=0;x<=5;x++){
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            DrawGrid();
-            ctx.save();
-            ctx.translate(2*unit.width,x*unit.height);
-            ctx.fillStyle = O.color;
-            ctx.fill(O.shape);
-            ctx.restore();
-            await delay(1000)
-    }
+    drop();
+    while (PLAY){
+        console.log("next frame");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        DrawGrid();
+        draw_shape(block_X,block_Y);
+        await delay(100);
     }
 };
-Game();
+
+document.addEventListener("keydown",(e)=>{
+    if (e.key === "s"){
+        block_Speed = 500;
+    }else if (e.key === "r"){
+        block_Speed = 1000;
+    }
+    else{
+        block_Speed = 1000;
+    }
+})
+
 /*
 ctx.save();
 ctx.translate(2*unit.width,0);
