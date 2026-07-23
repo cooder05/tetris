@@ -51,7 +51,7 @@ const Z ={
 Z.shape.rect(0,0,2*unit.width,unit.height);
 Z.shape.rect(unit.width,unit.height,2*unit.width,unit.height);
 
-canvas.width = unit.width*7;
+canvas.width = unit.width*6;
 canvas.height = unit.height*12; 
 
 function DrawGrid(){
@@ -67,27 +67,23 @@ function DrawGrid(){
     ctx.strokeStyle = "white";
     ctx.stroke();
 }
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-DrawGrid();
-
-canvas.addEventListener("click",async (e) => {
-        if (!document.fullscreenElement) {
-        try {
-            // Request full screen specifically for the canvas
-            await canvas.requestFullscreen();
-            } catch (err) {
-                console.error(`Error attempting to enable fullscreen: ${err.message}`);
-                }
-        } else {
-            // Exit full screen if it is already active
-            document.exitFullscreen();
-        }
-});
-
-function player(){
-
+async function Game(){
+    for (var j=0;j<=2;j++){
+        for (var x=0;x<=5;x++){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            DrawGrid();
+            ctx.save();
+            ctx.translate(2*unit.width,x*unit.height);
+            ctx.fillStyle = O.color;
+            ctx.fill(O.shape);
+            ctx.restore();
+            await delay(1000)
+    }
+    }
 };
-
+Game();
 /*
 ctx.save();
 ctx.translate(2*unit.width,0);
