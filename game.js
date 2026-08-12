@@ -2,14 +2,14 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-/* a 0.5 pixel offset to aligne with the display pixel in laptop so no blurry edges*/
-/*minos*/
+//a 0.5 pixel offset to aligne with the display pixel in laptop so no blurry edges
+//minos
 const unit = {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     color: "#00ffcc"
 };
-/*Tetriminos */
+//Tetriminos
 const I ={
     shape: new Path2D(),
     color: "#00ffea",
@@ -94,7 +94,11 @@ Z.shape.rect(0,0,2*unit.width,unit.height);
 Z.shape.rect(unit.width,unit.height,2*unit.width,unit.height);
 
 canvas.width = unit.width*6;
-canvas.height = unit.height*12; 
+canvas.height = unit.height*12;
+
+const lingrad = ctx.createLinearGradient(0,0,0,canvas.height);
+lingrad.addColorStop(1, "white");
+lingrad.addColorStop(0, "transparent");
 
 function DrawGrid(){
     
@@ -109,7 +113,8 @@ function DrawGrid(){
         ctx.moveTo(0 ,0.5 + y + unit.height);
         ctx.lineTo(canvas.width,0.5 + y + unit.height);
     }
-    ctx.strokeStyle = "white";
+    ctx.fillStyle = lingrad;
+    ctx.strokeStyle = lingrad;
     ctx.stroke();
     ctx.restore();
 }
@@ -117,13 +122,30 @@ function DrawGrid(){
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 let block_X = 2;
 let block_Y = 0;
-let block_type = Z;
+let block_type = L;
 let block_Speed = 1000;
 let block_Direction = 0;
 
+class tetriminos{
+    //TODO
+    //change the way the blocks Path2D obj representation to simplify adding to the stack, 
+    //move existing block logic into this class
+    
+    //constructor()
+    //drop/movement()
+    //colision()
+}
+class game{
+    
+    //score calculation
+    //block queue(upto 3 blocks)
+    //stack (how to save the blocks)
+    //clear stack logic
+}
+
 function draw_shape(x,y,shape){
     ctx.save();
-    /*ctx.translate(-shape.center[0]*unit.width,-shape.center[1]*unit.height);*/
+    //ctx.translate(-shape.center[0]*unit.width,-shape.center[1]*unit.height);
     ctx.translate((x+shape.centers[block_Direction][0])*unit.width+0.5,(y+shape.centers[block_Direction][1])*unit.height+0.5);
     ctx.rotate((Math.PI/2)*block_Direction);
     ctx.fillStyle = shape.color;
@@ -190,47 +212,3 @@ function HandleKeys(event){
     }
 }
 document.addEventListener("keydown",HandleKeys)
-
-/*
-ctx.save();
-ctx.translate(2*unit.width,0);
-ctx.fillStyle = O.color;
-ctx.fill(O.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(4*unit.width,0);
-ctx.fillStyle = T.color;
-ctx.fill(T.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(0,3*unit.height);
-ctx.fillStyle = L.color;
-ctx.fill(L.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(2*unit.width,3*unit.height);
-ctx.fillStyle = J.color;
-ctx.fill(J.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(4*unit.width,3*unit.height);
-ctx.fillStyle = S.color;
-ctx.fill(S.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(0,6*unit.height);
-ctx.fillStyle = Z.color;
-ctx.fill(Z.shape);
-ctx.restore();
-
-ctx.save();
-ctx.translate(3*unit.width,6*unit.height);
-ctx.fillStyle = I.color;
-ctx.fill(I.shape);
-ctx.restore();
-*/

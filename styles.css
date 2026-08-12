@@ -1,16 +1,35 @@
 body {
     margin: 0;
-    background: #111;
-    display: flex;
-    justify-content: center;
+    background-color: #000000;
+    color: #fff;
     /*
     align-items: center;
     height: 100vh;*/
 }
-        
 
+#view {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 #gameCanvas{
     /*image-rendering: pixelated;*/
-    border: 2px solid #fff;
+    border: 5px solid #fff;
+    border-top: none;
     background: #000;
+    margin-top: 20px;
+}
+
+button{
+    height: 40px;
+    background-color: #00000000;
+    border-radius: 5px;
+    border-color:#3d9dcac0 ;
+    color: #fff;
+}
+
+button:hover{
+    transition: 1s;
+    background-color: #11dd85fe;
+    border-color:#ebebecc0 ;
 }
