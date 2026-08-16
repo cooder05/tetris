@@ -5,7 +5,7 @@ const ctx = canvas.getContext("2d");
 //a 0.5 pixel offset to aligne with the display pixel in laptop so no blurry edges
 //minos
 const unit = {
-    px : 40,
+    px : 30,
     width: 40,
     height: 40,
     color: "#00ffcc"
@@ -13,10 +13,11 @@ const unit = {
 //Tetriminos
 const I ={
     shape: new Path2D(),
+    start_pos: [3,-1],
     shape2: {
-        A: [0,-1],
-        B: [0,1],
-        C: [0,2],
+        A: [1,0],
+        B: [2,0],
+        C: [3,0],
     },
     color: "#00ffcc",
     centers: {
@@ -29,6 +30,7 @@ const I ={
 I.shape.rect(0,0,unit.px,4*unit.px);
 const O ={
     shape: new Path2D(),
+    start_pos: [4,-2],
     shape2: {
         A: [0,1],
         B: [1,0],
@@ -45,10 +47,11 @@ const O ={
 O.shape.rect(0,0,2*unit.px,2*unit.px);
 const T ={
     shape: new Path2D(),
+    start_pos: [4,-1],
     shape2: {
         A: [-1,0],
         B: [1,0],
-        C: [0,1],
+        C: [0,-1],
     },
     color: "#ff00ee",
     centers: {
@@ -62,10 +65,11 @@ T.shape.rect(0,0,3*unit.px,unit.px  );
 T.shape.rect(unit.px,unit.px,unit.px,unit.px);
 const L ={
     shape: new Path2D(),
+    start_pos: [4,-1],
     shape2: {
-        A: [-0.5,-1.5],
-        B: [-0.5,0.5],
-        C: [0.5,0.5],
+        A: [-1,0],
+        B: [1,0],
+        C: [1,-1],
     },
     color: "#ffb700",
     centers: {
@@ -79,10 +83,11 @@ L.shape.rect(0,0,unit.px,3*unit.px  );
 L.shape.rect(unit.px,2*unit.px  ,unit.px,unit.px  );
 const J ={
     shape: new Path2D(),
+    start_pos: [4,-1],
     shape2: {
         'A': [-1,0],
         'B': [1,0],
-        'C': [-1,1],
+        'C': [-1,-1],
     },
     color: "#0099ff",
     centers: {
@@ -96,10 +101,11 @@ J.shape.rect(unit.px,0,unit.px,3*unit.px);
 J.shape.rect(0,2*unit.px,unit.px,unit.px);
 const S ={
     shape: new Path2D(),
+    start_pos: [4,-1],
     shape2: {
-        A: [1,0],
-        B: [0,1],
-        C: [-1,1],
+        A: [-1,0],
+        B: [0,-1],
+        C: [1,-1],
     },
     color: "#00ff37",
     centers: {
@@ -113,10 +119,11 @@ S.shape.rect(0,unit.px,2*unit.px,unit.px);
 S.shape.rect(unit.px,0,2*unit.px,unit.px);
 const Z ={
     shape: new Path2D(),
+    start_pos: [4,-1],
     shape2: {
-        A: [-1,0],
-        B: [0,1],
-        C: [1,1],
+        A: [-1,-1],
+        B: [0,-1],
+        C: [1,0],
     },
     color: "#ff1100",
     centers: {
@@ -129,8 +136,18 @@ const Z ={
 Z.shape.rect(0,0,2*unit.px,unit.px);
 Z.shape.rect(unit.px,unit.px,2*unit.px,unit.px);
 
-canvas.width = unit.px*6;
-canvas.height = unit.px*12;
+//Rotation kick-back/centers for SRS system N:north E:east S:south W:west
+//the order of elements in the list must be correct
+const TLJSZ_OFFSET = {
+    "N-E":[[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
+    "E-S":[[0,0],[1,0],[1,1],[0,-2],[1,-2]],
+    "S-W":[[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
+    "W-N":[[0,0],[1,0],[1,-1],[0,2],[1,2]]
+}
+
+
+canvas.width = unit.px*10;
+canvas.height = unit.px*20;
 
 const lingrad = ctx.createLinearGradient(0,0,0,canvas.height);
 lingrad.addColorStop(1, "white");
@@ -182,34 +199,34 @@ class tetriminos{
     block_type;
     context;
     position = [];
-    block_Y = 1;
-    block_X = 3;
+    block_Y = -1;
+    block_X = 5;
     block_Direction = 0;
     block_Speed = 1000;
     
     constructor(type){
         console.log("block created");
         this.block_type = type
+        this.block_Y = type.start_pos[1];
+        this.block_X = type.start_pos[0];
     }
 
     reset(){
         this.context;
         this.position = [];
-        this.block_Y = 1;
-        this.block_X = 2;
         this.block_Direction = 0;
         this.block_Speed = 1000;
     }
 
-    /*
+    
     draw2(){
 
         ctx.save();
-        ctx.translate((this.block_X+0.5)*unit.px,(this.block_Y+0.5)*unit.px);
+        ctx.translate((this.block_X)*unit.px,(this.block_Y)*unit.px);
         ctx.rotate((Math.PI/2)*this.block_Direction);
         ctx.fillStyle = this.block_type.color;
         ctx.strokeStyle = this.block_type.color;
-        ctx.fillRect(-0.5*unit.px, -0.5*unit.px, unit.px+1, unit.px+1);
+        ctx.fillRect(0,0, unit.px+1, unit.px+1);
         ctx.fillRect(this.block_type.shape2.A[0]*unit.px ,this.block_type.shape2.A[1]*unit.px, unit.px+1, unit.px+1);
         ctx.fillRect(this.block_type.shape2.B[0]*unit.px ,this.block_type.shape2.B[1]*unit.px, unit.px+1, unit.px+1);
         ctx.fillRect(this.block_type.shape2.C[0]*unit.px ,this.block_type.shape2.C[1]*unit.px, unit.px+1, unit.px+1);
@@ -221,7 +238,7 @@ class tetriminos{
         ctx.restore();
 
     }
-    */
+    /*
     draw_shape(){
         ctx.save();
         //ctx.translate(-shape.center[0]*unit.px,-shape.center[1]*unit.px);
@@ -236,10 +253,10 @@ class tetriminos{
         ctx.strokeRect(this.block_X*unit.px+0.5,this.block_Y*unit.px+0.5,20,20);
         ctx.restore();
     }
-
+    */
     async drop(){
 
-        while(this.block_Y<8){
+        while(this.block_Y<20){
             await delay(this.block_Speed);
             this.block_Y += 1;
         }
@@ -250,7 +267,7 @@ class tetriminos{
 }
 class game{
     
-    player_block = new tetriminos(L);
+    player_block = new tetriminos(Z);
     PLAY = false;
 
     constructor(){
@@ -268,8 +285,8 @@ class game{
         while (this.PLAY){
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             DrawGrid();
-            this.player_block.draw_shape();
-            //this.player_block.draw2();
+            //this.player_block.draw_shape();
+            this.player_block.draw2();
             await delay(100);
         }
     }
