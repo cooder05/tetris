@@ -14,8 +14,8 @@ body {
 }
 #gameCanvas{
     /*image-rendering: pixelated;*/
-    border: 5px solid #fff;
     border-top: none;
+    border: 5px solid #fff;
     background: #000;
     margin-top: 20px;
 }

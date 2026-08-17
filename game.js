@@ -120,11 +120,7 @@ S.shape.rect(unit.px,0,2*unit.px,unit.px);
 const Z ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2: {
-        A: [-1,-1],
-        B: [0,-1],
-        C: [1,0],
-    },
+    shape2:[[-1,-1],[0,-1],[1,0]],
     color: "#ff1100",
     centers: {
         0:[-1,0],
@@ -138,11 +134,26 @@ Z.shape.rect(unit.px,unit.px,2*unit.px,unit.px);
 
 //Rotation kick-back/centers for SRS system N:north E:east S:south W:west
 //the order of elements in the list must be correct
+const Directions = {
+    'N':0,
+    'E':1,
+    'S':2,
+    'W':3,
+}
+
 const TLJSZ_OFFSET = {
-    "N-E":[[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
-    "E-S":[[0,0],[1,0],[1,1],[0,-2],[1,-2]],
-    "S-W":[[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
-    "W-N":[[0,0],[1,0],[1,-1],[0,2],[1,2]]
+    [Directions.N]: {
+        [Directions.E]: [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]]
+    },
+    [Directions.E]: {
+        [Directions.S]: [[0,0], [1,0], [1,1], [0,-2], [1,-2]]
+    },
+    [Directions.S]: {
+        [Directions.W]: [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]]
+    },
+    [Directions.W]: {
+        [Directions.N]: [[0,0], [1,0], [1,-1], [0,2], [1,2]]
+    }
 }
 
 
@@ -197,39 +208,60 @@ class tetriminos{
     //TODO
     //change the way the blocks Path2D obj representation to simplify adding to the stack,
     block_type;
+    block_shape;
     context;
     position = [];
     block_Y = -1;
     block_X = 5;
-    block_Direction = 0;
+    next_block_Direction = Directions.N;
+    prev_block_Direction = Directions.N;
     block_Speed = 1000;
     
     constructor(type){
         console.log("block created");
-        this.block_type = type
+        this.block_type = type;
+        this.block_shape = type.shape2;
         this.block_Y = type.start_pos[1];
         this.block_X = type.start_pos[0];
+        console.log("c",this.prev_block_Direction,this.next_block_Direction);
     }
 
     reset(){
         this.context;
         this.position = [];
-        this.block_Direction = 0;
+        this.block_Y = this.block_type.start_pos[1];
+        this.block_X = this.block_type.start_pos[0];
+        this.next_block_Direction = Directions.N;
+        this.prev_block_Direction = Directions.N;
         this.block_Speed = 1000;
     }
 
     
     draw2(){
-
+        var new_shape;
         ctx.save();
         ctx.translate((this.block_X)*unit.px,(this.block_Y)*unit.px);
-        ctx.rotate((Math.PI/2)*this.block_Direction);
+        if (this.prev_block_Direction !== this.next_block_Direction){
+            console.log("b",this.prev_block_Direction,this.next_block_Direction);
+            this.prev_block_Direction = this.next_block_Direction;
+            console.log("a",this.prev_block_Direction,this.next_block_Direction);
+            new_shape = this.block_shape.map(points =>[points[1],-points[0]]);
+            //ctx.rotate((Math.PI/2)*this.next_block_Direction);
+            if (this.colision_ckeck(new_shape)){
+                
+                this.block_shape = new_shape;
+            }else{
+
+            }
+        }else{
+
+        }
         ctx.fillStyle = this.block_type.color;
         ctx.strokeStyle = this.block_type.color;
-        ctx.fillRect(0,0, unit.px+1, unit.px+1);
-        ctx.fillRect(this.block_type.shape2.A[0]*unit.px ,this.block_type.shape2.A[1]*unit.px, unit.px+1, unit.px+1);
-        ctx.fillRect(this.block_type.shape2.B[0]*unit.px ,this.block_type.shape2.B[1]*unit.px, unit.px+1, unit.px+1);
-        ctx.fillRect(this.block_type.shape2.C[0]*unit.px ,this.block_type.shape2.C[1]*unit.px, unit.px+1, unit.px+1);
+        ctx.fillRect(0,0, unit.px, unit.px);
+        ctx.fillRect(this.block_shape[0][0]*unit.px ,this.block_shape[0][1]*unit.px, unit.px, unit.px);
+        ctx.fillRect(this.block_shape[1][0]*unit.px ,this.block_shape[1][1]*unit.px, unit.px, unit.px);
+        ctx.fillRect(this.block_shape[2][0]*unit.px ,this.block_shape[2][1]*unit.px, unit.px, unit.px);
         ctx.restore();
 
         ctx.save();
@@ -263,7 +295,16 @@ class tetriminos{
     }
 
     //drop/movement()
-    //colision()
+    
+    colision_ckeck(shape){
+        for (let block of shape){
+            const [x,y] = block;
+            if (!(x+this.block_X<9 && y+this.block_Y<19)){
+                return false;
+            }
+        }
+        return true;
+    }
 }
 class game{
     
@@ -312,12 +353,13 @@ function HandleKeys(event){
     if (event.key === "ArrowDown"){
         Gcode.player_block.block_Speed = 500;
     }else if (event.key === "ArrowUp"){
-        Gcode.player_block.block_Direction = (Gcode.player_block.block_Direction+1)%4;
+        Gcode.player_block.next_block_Direction = (Gcode.player_block.prev_block_Direction+1)%4;
+        console.log("press",Gcode.player_block.prev_block_Direction,Gcode.player_block.next_block_Direction);
     }else if (event.key === "r"){
         Gcode.player_block.block_Speed = 1000;
         drop();
     }else if (event.key === "ArrowRight"){
-        if (Gcode.player_block.block_X <5){
+        if (Gcode.player_block.block_X <9){
             Gcode.player_block.block_X +=1;
         }
     }else if (event.key === "ArrowLeft"){
