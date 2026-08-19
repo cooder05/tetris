@@ -2,6 +2,10 @@
 goal: make a multiplayer tetris games
 
 # TO-DO:
+Menu screen
+
+soud design
+
 Collision detection
 
 save placed blocks
@@ -12,6 +16,9 @@ networking/netcode (need to elobrate/learn)(mabye i will do three version with d
 
 # DOING:
 SRS system
+
+# ISSUES:
+rotation: whrn s block reaches base and rotates, it jumps in the x axis, it should onlt jump in y need to check
 
 # DONE:
 added block fall and rotation(basic)

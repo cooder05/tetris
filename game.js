@@ -14,11 +14,7 @@ const unit = {
 const I ={
     shape: new Path2D(),
     start_pos: [3,-1],
-    shape2: {
-        A: [1,0],
-        B: [2,0],
-        C: [3,0],
-    },
+    shape2: [[0,0],[1,0],[2,0],[3,0],],
     color: "#00ffcc",
     centers: {
         0:[0,-1],
@@ -31,11 +27,7 @@ I.shape.rect(0,0,unit.px,4*unit.px);
 const O ={
     shape: new Path2D(),
     start_pos: [4,-2],
-    shape2: {
-        A: [0,1],
-        B: [1,0],
-        C: [1,1],
-    },
+    shape2: [[0,0],[0,1],[1,0],[1,1]],
     color: "#ffee00",
     centers: {
         0:[0,0],
@@ -48,11 +40,7 @@ O.shape.rect(0,0,2*unit.px,2*unit.px);
 const T ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2: {
-        A: [-1,0],
-        B: [1,0],
-        C: [0,-1],
-    },
+    shape2: [[0,0],[-1,0],[1,0],[0,-1],],
     color: "#ff00ee",
     centers: {
         0:[-1,0],
@@ -66,11 +54,7 @@ T.shape.rect(unit.px,unit.px,unit.px,unit.px);
 const L ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2: {
-        A: [-1,0],
-        B: [1,0],
-        C: [1,-1],
-    },
+    shape2: [[0,0],[-1,0],[1,0],[1,-1]],
     color: "#ffb700",
     centers: {
         0:[0,-1],
@@ -84,11 +68,7 @@ L.shape.rect(unit.px,2*unit.px  ,unit.px,unit.px  );
 const J ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2: {
-        'A': [-1,0],
-        'B': [1,0],
-        'C': [-1,-1],
-    },
+    shape2: [[0,0],[-1,0],[1,0],[-1,-1]],
     color: "#0099ff",
     centers: {
         0:[-1,-1],
@@ -102,11 +82,7 @@ J.shape.rect(0,2*unit.px,unit.px,unit.px);
 const S ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2: {
-        A: [-1,0],
-        B: [0,-1],
-        C: [1,-1],
-    },
+    shape2: [[0,0],[-1,0],[0,-1],[1,-1]],
     color: "#00ff37",
     centers: {
         0:[-1,0],
@@ -120,7 +96,7 @@ S.shape.rect(unit.px,0,2*unit.px,unit.px);
 const Z ={
     shape: new Path2D(),
     start_pos: [4,-1],
-    shape2:[[-1,-1],[0,-1],[1,0]],
+    shape2: [[0,0],[-1,-1],[0,-1],[1,0]],
     color: "#ff1100",
     centers: {
         0:[-1,0],
@@ -143,16 +119,16 @@ const Directions = {
 
 const TLJSZ_OFFSET = {
     [Directions.N]: {
-        [Directions.E]: [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]]
+        [Directions.E]: [[0,0], [1,0], [1,1], [0,-2], [1,-2]]
     },
     [Directions.E]: {
-        [Directions.S]: [[0,0], [1,0], [1,1], [0,-2], [1,-2]]
+        [Directions.S]: [[0,0], [-1,0], [-1,-1], [0,2], [-1,2]]
     },
     [Directions.S]: {
-        [Directions.W]: [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]]
+        [Directions.W]: [[0,0], [1,0], [1,-1], [0,2], [1,2]]
     },
     [Directions.W]: {
-        [Directions.N]: [[0,0], [1,0], [1,-1], [0,2], [1,2]]
+        [Directions.N]: [[0,0], [-1,0], [-1,1], [0,-2], [-1,-2]]
     }
 }
 
@@ -198,8 +174,8 @@ function check(){
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 /*
-let block_X = 2;
-let block_Y = 0;
+let curr_block_X = 2;
+let curr_block_Y = 0;
 let block_type = L;
 let block_Speed = 1000;
 let block_Direction = 0;
@@ -211,62 +187,99 @@ class tetriminos{
     block_shape;
     context;
     position = [];
-    block_Y = -1;
-    block_X = 5;
-    next_block_Direction = Directions.N;
-    prev_block_Direction = Directions.N;
+    //curr: actual block state
+    curr_block_Y = -1;
+    curr_block_X = 5;
+    curr_block_Direction = Directions.N;
+    //next:(buffer) all movements stored here first to check if move is possible before changing the actual block state
+    next_block_Direction = this.curr_block_Direction;
+    next_block_Y = this.curr_block_Y;
+    next_block_X = this.curr_block_X;
+    
     block_Speed = 1000;
     
     constructor(type){
         console.log("block created");
         this.block_type = type;
         this.block_shape = type.shape2;
-        this.block_Y = type.start_pos[1];
-        this.block_X = type.start_pos[0];
-        console.log("c",this.prev_block_Direction,this.next_block_Direction);
+        this.curr_block_Y = type.start_pos[1];
+        this.curr_block_X = type.start_pos[0];
+
+        this.next_block_Y = type.start_pos[1];
+        this.next_block_X = type.start_pos[0];
+        console.log("c",this.curr_block_Direction,this.next_block_Direction);
     }
 
     reset(){
         this.context;
         this.position = [];
-        this.block_Y = this.block_type.start_pos[1];
-        this.block_X = this.block_type.start_pos[0];
-        this.next_block_Direction = Directions.N;
-        this.prev_block_Direction = Directions.N;
+        this.curr_block_Y = this.block_type.start_pos[1];
+        this.curr_block_X = this.block_type.start_pos[0];
+        this.curr_block_Direction = Directions.N;
         this.block_Speed = 1000;
+
+        this.next_block_Direction = this.curr_block_Direction;
+        this.next_block_Y = this.curr_block_Y;
+        this.next_block_X = this.curr_block_X;
+    }
+
+    update(){
+        var new_shape;
+        var kick_shape;
+        //movement check
+        if (this.curr_block_X !== this.next_block_X){
+            if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y])){
+                this.curr_block_X = this.next_block_X;
+            }else{
+                this.next_block_X = this.curr_block_X;
+            }
+        }else if(this.curr_block_Y !== this.next_block_Y){
+            if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y])){
+                this.curr_block_Y = this.next_block_Y;
+            }else{
+                this.next_block_Y = this.curr_block_Y;
+            }
+        }
+        //rotation check
+        if (this.curr_block_Direction !== this.next_block_Direction){
+            new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
+            //new_shape = this.block_shape.map(points =>[points[1],-points[0]]); ccw rotation
+            //ctx.rotate((Math.PI/2)*this.next_block_Direction);
+            //console.log("b",this.curr_block_X,this.curr_block_Y,this.curr_block_Direction,this.next_block_Direction,new_shape);
+
+            //SRS check kickback
+            for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
+                kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
+                if (this.is_colision(kick_shape,[this.curr_block_X,this.curr_block_Y])){
+                    this.next_block_Direction = this.curr_block_Direction; //reset direction
+                }else{
+                    this.block_shape = new_shape;
+                    this.curr_block_X += x;
+                    this.curr_block_Y += y;
+                    this.curr_block_Direction = this.next_block_Direction; //update direction
+                    break;
+                }
+            }
+        }
+        
     }
 
     
     draw2(){
-        var new_shape;
         ctx.save();
-        ctx.translate((this.block_X)*unit.px,(this.block_Y)*unit.px);
-        if (this.prev_block_Direction !== this.next_block_Direction){
-            console.log("b",this.prev_block_Direction,this.next_block_Direction);
-            this.prev_block_Direction = this.next_block_Direction;
-            console.log("a",this.prev_block_Direction,this.next_block_Direction);
-            new_shape = this.block_shape.map(points =>[points[1],-points[0]]);
-            //ctx.rotate((Math.PI/2)*this.next_block_Direction);
-            if (this.colision_ckeck(new_shape)){
-                
-                this.block_shape = new_shape;
-            }else{
-
-            }
-        }else{
-
-        }
+        
+        ctx.translate((this.curr_block_X)*unit.px,(this.curr_block_Y)*unit.px);
         ctx.fillStyle = this.block_type.color;
         ctx.strokeStyle = this.block_type.color;
-        ctx.fillRect(0,0, unit.px, unit.px);
         ctx.fillRect(this.block_shape[0][0]*unit.px ,this.block_shape[0][1]*unit.px, unit.px, unit.px);
         ctx.fillRect(this.block_shape[1][0]*unit.px ,this.block_shape[1][1]*unit.px, unit.px, unit.px);
         ctx.fillRect(this.block_shape[2][0]*unit.px ,this.block_shape[2][1]*unit.px, unit.px, unit.px);
+        ctx.fillRect(this.block_shape[3][0]*unit.px ,this.block_shape[3][1]*unit.px, unit.px, unit.px);
         ctx.restore();
 
         ctx.save();
         ctx.strokeStyle = "#ff0000";
-        ctx.strokeRect(this.block_X*unit.px+0.5,this.block_Y*unit.px+0.5,20,20);
+        ctx.strokeRect(this.curr_block_X*unit.px+0.5,this.curr_block_Y*unit.px+0.5,20,20);
         ctx.restore();
 
     }
@@ -274,7 +287,7 @@ class tetriminos{
     draw_shape(){
         ctx.save();
         //ctx.translate(-shape.center[0]*unit.px,-shape.center[1]*unit.px);
-        ctx.translate((this.block_X+this.block_type.centers[this.block_Direction][0])*unit.px+0.5,(this.block_Y+this.block_type.centers[this.block_Direction][1])*unit.px   +0.5);
+        ctx.translate((this.curr_block_X+this.block_type.centers[this.block_Direction][0])*unit.px+0.5,(this.curr_block_Y+this.block_type.centers[this.block_Direction][1])*unit.px   +0.5);
         ctx.rotate((Math.PI/2)*this.block_Direction);
         ctx.fillStyle = this.block_type.color;
         ctx.fill(this.block_type.shape);
@@ -282,33 +295,33 @@ class tetriminos{
 
         ctx.save();
         ctx.strokeStyle = "#ff0000";
-        ctx.strokeRect(this.block_X*unit.px+0.5,this.block_Y*unit.px+0.5,20,20);
+        ctx.strokeRect(this.curr_block_X*unit.px+0.5,this.curr_block_Y*unit.px+0.5,20,20);
         ctx.restore();
     }
     */
     async drop(){
 
-        while(this.block_Y<20){
+        while(this.curr_block_Y<20){
             await delay(this.block_Speed);
-            this.block_Y += 1;
+            this.next_block_Y += 1;
         }
     }
 
     //drop/movement()
     
-    colision_ckeck(shape){
+    is_colision(shape,pos){
         for (let block of shape){
             const [x,y] = block;
-            if (!(x+this.block_X<9 && y+this.block_Y<19)){
-                return false;
+            if (!((0 <= x+pos[0] && x+pos[0]<=9) && y+pos[1]<=19)){  //currently only check the 4 wall of the game
+                return true;
             }
         }
-        return true;
+        return false;
     }
 }
 class game{
     
-    player_block = new tetriminos(Z);
+    player_block = new tetriminos(S);
     PLAY = false;
 
     constructor(){
@@ -327,6 +340,7 @@ class game{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             DrawGrid();
             //this.player_block.draw_shape();
+            this.player_block.update();
             this.player_block.draw2();
             await delay(100);
         }
@@ -353,23 +367,16 @@ function HandleKeys(event){
     if (event.key === "ArrowDown"){
         Gcode.player_block.block_Speed = 500;
     }else if (event.key === "ArrowUp"){
-        Gcode.player_block.next_block_Direction = (Gcode.player_block.prev_block_Direction+1)%4;
-        console.log("press",Gcode.player_block.prev_block_Direction,Gcode.player_block.next_block_Direction);
+        Gcode.player_block.next_block_Direction = (Gcode.player_block.curr_block_Direction+1)%4;
     }else if (event.key === "r"){
         Gcode.player_block.block_Speed = 1000;
         drop();
     }else if (event.key === "ArrowRight"){
-        if (Gcode.player_block.block_X <9){
-            Gcode.player_block.block_X +=1;
-        }
+            console.log("right")
+            Gcode.player_block.next_block_X = Gcode.player_block.curr_block_X+1;
     }else if (event.key === "ArrowLeft"){
-        if (Gcode.player_block.block_X > 1){
-            Gcode.player_block.block_X -=1;
-        }
-    }else if (event.key === ""){
-        if (Gcode.player_block.block_X > 2){
-            Gcode.player_block.block_X -=1;
-        }
+            console.log("left")
+            Gcode.player_block.next_block_X = Gcode.player_block.curr_block_X-1;
     }else{
         Gcode.player_block.block_Speed = 1000;
     }
