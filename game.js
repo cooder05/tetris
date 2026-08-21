@@ -136,6 +136,7 @@ const TLJSZ_OFFSET = {
 canvas.width = unit.px*10;
 canvas.height = unit.px*20;
 
+
 const lingrad = ctx.createLinearGradient(0,0,0,canvas.height);
 lingrad.addColorStop(1, "white");
 lingrad.addColorStop(0, "transparent");
@@ -207,7 +208,6 @@ class tetriminos{
 
         this.next_block_Y = type.start_pos[1];
         this.next_block_X = type.start_pos[0];
-        console.log("c",this.curr_block_Direction,this.next_block_Direction);
     }
 
     reset(){
@@ -234,6 +234,7 @@ class tetriminos{
                 this.next_block_X = this.curr_block_X;
             }
         }else if(this.curr_block_Y !== this.next_block_Y){
+            console.log("b",this.curr_block_X,this.curr_block_Y,this.curr_block_Direction,this.next_block_Direction);
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y])){
                 this.curr_block_Y = this.next_block_Y;
             }else{
@@ -299,13 +300,9 @@ class tetriminos{
         ctx.restore();
     }
     */
-    async drop(){
-
-        while(this.curr_block_Y<20){
-            await delay(this.block_Speed);
-            this.next_block_Y += 1;
+    drop(){
+        this.next_block_Y = this.curr_block_Y+1;
         }
-    }
 
     //drop/movement()
     
@@ -326,25 +323,13 @@ class game{
 
     constructor(){
         console.log("game created");
-        console.log(this.player_block);
     }
 
     reset(){
         this.player_block.reset();
     }
 
-    async main(){
-        console.log("game start in class");
-        this.player_block.drop();
-        while (this.PLAY){
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            DrawGrid();
-            //this.player_block.draw_shape();
-            this.player_block.update();
-            this.player_block.draw2();
-            await delay(100);
-        }
-    }
+    
     //score calculation
     //block queue(upto 3 blocks)
     //stack (how to save the blocks)
@@ -353,14 +338,17 @@ class game{
 
 Gcode = new game();
 
+let reqid;
+
 function toggleGame() {
     Gcode.PLAY = !Gcode.PLAY;
-    console.log(Gcode.PLAY);
     if (Gcode.PLAY) {
         console.log("game.start");
         Gcode.reset();
-        Gcode.main(); // Kickstart the loop only when turning ON
-    }
+        reqid = window.requestAnimationFrame(main);// Kickstart the loop only when turning ON
+    }else[
+        window.cancelAnimationFrame(reqid)
+    ]
 }
 
 function HandleKeys(event){
@@ -383,3 +371,22 @@ function HandleKeys(event){
 }
 document.addEventListener("keydown",HandleKeys)
 //check();
+
+const drop_tick = 1000;
+let start_time;
+
+function main(timestamp){
+    start_time = start_time ? start_time: timestamp;
+    if (timestamp-start_time > drop_tick){
+        Gcode.player_block.drop();
+        start_time = timestamp;
+    }
+    if(Gcode.PLAY){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        DrawGrid();
+        //Gcode.player_block.draw_shape();
+        Gcode.player_block.update();
+        Gcode.player_block.draw2();
+        reqid = window.requestAnimationFrame(main);
+    }
+}
