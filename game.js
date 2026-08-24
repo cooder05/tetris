@@ -161,28 +161,6 @@ function DrawGrid(){
     ctx.restore();
 }
 
-/*    check canvas resolution on zoom py only drawing one pixel continously
-function check(){
-
-    ctx.save();
-    for(var x=0; x<=255; x+=2){
-        for(var y=0; y<=255;y+=2){
-            ctx.fillStyle = `rgb(255 ${x} ${y})`;
-            ctx.fillRect(x,y,1,1);
-        }
-    }
-    ctx.restore();
-}
-*/
-
-/*
-let curr_block_X = 2;
-let curr_block_Y = 0;
-let block_type = L;
-let block_Speed = 1000;
-let block_Direction = 0;
-*/
-
 //stack implementation
 //need to check if it can be optmised
 var stack = [];
@@ -197,6 +175,7 @@ function DrawStack(){
         }
         ctx.restore();
     }
+    console.log("all-done")
 }
 class tetriminos{
     //TODO
@@ -213,7 +192,7 @@ class tetriminos{
     next_block_Direction = this.curr_block_Direction;
     next_block_Y = this.curr_block_Y;
     next_block_X = this.curr_block_X;
-    static #lock_time = 500;
+    static lock_time = 500;
     static #max_lock_moves = 15;
     start_lock_time;
     
@@ -248,39 +227,43 @@ class tetriminos{
         var kick_shape;
         //movement check
         if (this.curr_block_X !== this.next_block_X){
+            console.log("x",this.curr_block_X,this.next_block_X);
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_X = this.next_block_X;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
                 this.next_block_X = this.curr_block_X;
             }
+            console.log("a-x",this.curr_block_X,this.next_block_X);
         }else if(this.curr_block_Y !== this.next_block_Y){
+            console.log("y",this.curr_block_Y,this.next_block_Y);
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_Y = this.next_block_Y;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
                 this.next_block_Y = this.curr_block_Y;
             }
+            console.log("a-y",this.curr_block_Y,this.next_block_Y);
         }
         //rotation check
         if (this.curr_block_Direction !== this.next_block_Direction){
             new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
             //new_shape = this.block_shape.map(points =>[points[1],-points[0]]); ccw rotation
             //ctx.rotate((Math.PI/2)*this.next_block_Direction);
-            console.log("br",this.curr_block_X,this.curr_block_Y,this.curr_block_Direction,this.next_block_Direction,new_shape);
+            //console.log("br",this.curr_block_X,this.curr_block_Y,this.curr_block_Direction,this.next_block_Direction,new_shape);
 
             //SRS check kickback
             for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
                 kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
+                console.log("r");
                 if (this.is_colision(kick_shape,[this.curr_block_X,this.curr_block_Y],timestamp)){
-                    console.log("c",x,y,this.curr_block_Direction,this.next_block_Direction,kick_shape);
+                    continue
                 }else{
                     this.block_shape = new_shape;
                     this.curr_block_X += x;
                     this.curr_block_Y += y;
                     this.curr_block_Direction = this.next_block_Direction; //update direction
                     this.start_lock_time = undefined;//reset lockdown timer
-                    console.log("nc",x,y,this.curr_block_Direction,this.next_block_Direction,kick_shape);
                     break;
                 }
                 
@@ -309,62 +292,30 @@ class tetriminos{
         ctx.restore();
 
     }
-    /*
-    draw_shape(){
-        ctx.save();
-        //ctx.translate(-shape.center[0]*unit.px,-shape.center[1]*unit.px);
-        ctx.translate((this.curr_block_X+this.block_type.centers[this.block_Direction][0])*unit.px+0.5,(this.curr_block_Y+this.block_type.centers[this.block_Direction][1])*unit.px   +0.5);
-        ctx.rotate((Math.PI/2)*this.block_Direction);
-        ctx.fillStyle = this.block_type.color;
-        ctx.fill(this.block_type.shape);
-        ctx.restore();
-
-        ctx.save();
-        ctx.strokeStyle = "#ff0000";
-        ctx.strokeRect(this.curr_block_X*unit.px+0.5,this.curr_block_Y*unit.px+0.5,20,20);
-        ctx.restore();
-    }
-    */
+    //drop/movement()
     drop(){
         this.next_block_Y = this.curr_block_Y+1;
         }
 
-    //drop/movement()
     
     //code looks inefficent need to check if i can sreamline the calculation/check
     is_colision(shape,pos,timestamp){
         for (let block of shape){
             const [x,y] = block;
-            if (!((0 <= x+pos[0] && x+pos[0]<=9) && y+pos[1]<=19)){  //currently only check the 4 wall of the game
-
+            if (!((0 <= x+pos[0] && x+pos[0]<=9) && y+pos[1]<=19)){
+                console.log("edge ckeck",pos,this.start_lock_time,timestamp);
                 if (!this.start_lock_time){
                     this.start_lock_time = timestamp;
-                }else{
-                    if (timestamp-this.start_lock_time > tetriminos.#lock_time){
-                        //console.log("lock",timestamp-this.start_lock_time);
-                        stack.push([this.block_type.color,[this.curr_block_X,this.curr_block_Y],this.block_shape]);
-                        console.log("pushed",stack)
-                        this.block_type = Shape_arr[Math.random() * Shape_arr.length | 0];
-                        this.reset();
-                        this.start_lock_time = undefined;//reset lockdown timer
-                    }
+                    console.log("set",timestamp);
                 }
                 return true;
             }else{ 
                 for (const sblock of stack){
+                    console.log("block ckeck",pos,this.start_lock_time,timestamp);
                     for (const [sx,sy] of sblock[2]){
-                        //console.log(pos,[x,y],(x+pos[0] === sblock[1][0]+sx),(y+pos[1] === sblock[1][1]+sy));
                         if (x+pos[0] === sblock[1][0]+sx && y+pos[1] === sblock[1][1]+sy){
                             if (!this.start_lock_time){
                                 this.start_lock_time = timestamp;
-                            }else{
-                                if (timestamp-this.start_lock_time > tetriminos.#lock_time){
-                                    stack.push([this.block_type.color,[this.curr_block_X,this.curr_block_Y],this.block_shape]);
-                                    //console.log("pushed",stack)
-                                    this.block_type = Shape_arr[Math.random() * Shape_arr.length | 0];
-                                    this.reset();
-                                    this.start_lock_time = undefined;//reset lockdown timer
-                                }
                             }
                             return true;
                         }
@@ -434,6 +385,13 @@ function main(timestamp){
     if (timestamp-start_time > drop_tick){
         Gcode.player_block.drop();
         start_time = timestamp;
+    }
+    if(timestamp-Gcode.player_block.start_lock_time >= tetriminos.lock_time){
+        stack.push([Gcode.player_block.block_type.color,[Gcode.player_block.curr_block_X,Gcode.player_block.curr_block_Y],Gcode.player_block.block_shape]);
+        console.log("pushed",timestamp);
+        Gcode.player_block.block_type = Shape_arr[Math.random() * Shape_arr.length | 0];
+        Gcode.player_block.reset();
+        Gcode.player_block.start_lock_time = undefined;//reset lockdown timer
     }
     if(Gcode.PLAY){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
