@@ -160,11 +160,7 @@ function DrawGrid(){
     ctx.stroke();
     ctx.restore();
 }
-
-//stack implementation
-//need to check if it can be optmised
-var stack = [];
-
+/*
 function DrawStack(){
     for (const block of stack){
         ctx.save();
@@ -175,8 +171,8 @@ function DrawStack(){
         }
         ctx.restore();
     }
-    console.log("all-done")
 }
+*/
 class tetriminos{
     //TODO
     //change the way the blocks Path2D obj representation to simplify adding to the stack,
@@ -227,35 +223,28 @@ class tetriminos{
         var kick_shape;
         //movement check
         if (this.curr_block_X !== this.next_block_X){
-            console.log("x",this.curr_block_X,this.next_block_X);
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_X = this.next_block_X;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
                 this.next_block_X = this.curr_block_X;
             }
-            console.log("a-x",this.curr_block_X,this.next_block_X);
         }else if(this.curr_block_Y !== this.next_block_Y){
-            console.log("y",this.curr_block_Y,this.next_block_Y);
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_Y = this.next_block_Y;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
                 this.next_block_Y = this.curr_block_Y;
             }
-            console.log("a-y",this.curr_block_Y,this.next_block_Y);
         }
         //rotation check
         if (this.curr_block_Direction !== this.next_block_Direction){
             new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
             //new_shape = this.block_shape.map(points =>[points[1],-points[0]]); ccw rotation
-            //ctx.rotate((Math.PI/2)*this.next_block_Direction);
-            //console.log("br",this.curr_block_X,this.curr_block_Y,this.curr_block_Direction,this.next_block_Direction,new_shape);
 
             //SRS check kickback
             for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
                 kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
-                console.log("r");
                 if (this.is_colision(kick_shape,[this.curr_block_X,this.curr_block_Y],timestamp)){
                     continue
                 }else{
@@ -274,7 +263,7 @@ class tetriminos{
     }
 
     
-    draw2(){
+    draw_shape(){
         ctx.save();
         
         ctx.translate((this.curr_block_X)*unit.px,(this.curr_block_Y)*unit.px);
@@ -302,24 +291,20 @@ class tetriminos{
     is_colision(shape,pos,timestamp){
         for (let block of shape){
             const [x,y] = block;
-            if (!((0 <= x+pos[0] && x+pos[0]<=9) && y+pos[1]<=19)){
-                console.log("edge ckeck",pos,this.start_lock_time,timestamp);
+            if (y+pos[1]>19){
                 if (!this.start_lock_time){
                     this.start_lock_time = timestamp;
-                    console.log("set",timestamp);
+                    console.log(y+pos[1],"set",timestamp);
                 }
                 return true;
+            }else if(!(0 <= x+pos[0] && x+pos[0]<=9)){
+                return true;
             }else{ 
-                for (const sblock of stack){
-                    console.log("block ckeck",pos,this.start_lock_time,timestamp);
-                    for (const [sx,sy] of sblock[2]){
-                        if (x+pos[0] === sblock[1][0]+sx && y+pos[1] === sblock[1][1]+sy){
-                            if (!this.start_lock_time){
-                                this.start_lock_time = timestamp;
-                            }
-                            return true;
+                if ((y+pos[1]>0) && game.stack[y+pos[1]][x+pos[0]] != "*"){
+                    if (!this.start_lock_time){
+                        this.start_lock_time = timestamp;
                         }
-                    }
+                    return true;
                 }
             }
         }
@@ -327,6 +312,10 @@ class tetriminos{
     }
 }
 class game{
+
+    //block stack implementation
+    //need to check if it can be optmised
+    static stack = Array.from({ length: 20 }, () => Array(10).fill('*'));
     
     player_block = new tetriminos(Shape_arr[5]);
     PLAY = false;
@@ -343,6 +332,23 @@ class game{
     //score calculation
     //block queue(upto 3 blocks)
     //stack (how to save the blocks)
+    update_stack(){
+
+    }
+
+    draw_stack(){
+        for(var i=0;i<20;i++){
+            for(var j=0;j<10;j++){
+                if (game.stack[i][j] != '*'){
+                    ctx.save();
+                    ctx.fillStyle = game.stack[i][j];
+                    ctx.fillRect(j*unit.px,i*unit.px,unit.px,unit.px);
+                    ctx.restore();
+                }
+                
+            }    
+        }
+    }
     //clear stack logic
 }
 
@@ -377,7 +383,7 @@ function HandleKeys(event){
 document.addEventListener("keydown",HandleKeys);
 //check();
 
-const drop_tick = 1000;
+const drop_tick = 500;
 let start_time;
 
 function main(timestamp){
@@ -387,8 +393,11 @@ function main(timestamp){
         start_time = timestamp;
     }
     if(timestamp-Gcode.player_block.start_lock_time >= tetriminos.lock_time){
-        stack.push([Gcode.player_block.block_type.color,[Gcode.player_block.curr_block_X,Gcode.player_block.curr_block_Y],Gcode.player_block.block_shape]);
-        console.log("pushed",timestamp);
+        for (block of Gcode.player_block.block_shape){
+            game.stack[Gcode.player_block.curr_block_Y+block[1]][Gcode.player_block.curr_block_X+block[0]] = Gcode.player_block.block_type.color;
+        }
+        //stack.push([Gcode.player_block.block_type.color,[Gcode.player_block.curr_block_X,Gcode.player_block.curr_block_Y],Gcode.player_block.block_shape]);
+        //console.log("pushed",timestamp);
         Gcode.player_block.block_type = Shape_arr[Math.random() * Shape_arr.length | 0];
         Gcode.player_block.reset();
         Gcode.player_block.start_lock_time = undefined;//reset lockdown timer
@@ -396,10 +405,11 @@ function main(timestamp){
     if(Gcode.PLAY){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         DrawGrid();
-        DrawStack();
+        Gcode.draw_stack();
+        //DrawStack();
         //Gcode.player_block.draw_shape();
         Gcode.player_block.update(timestamp);
-        Gcode.player_block.draw2();
+        Gcode.player_block.draw_shape();
         reqid = window.requestAnimationFrame(main);
     }
 }
