@@ -333,7 +333,22 @@ class game{
     //block queue(upto 3 blocks)
     //stack (how to save the blocks)
     update_stack(){
-
+        for (let i = 0; i < game.stack.length; i++) {
+            var isfull = true;
+            for (let j = 0; j < game.stack[i].length; j++) {
+                if (game.stack[i][j] == '*') {
+                    isfull = false;
+                    break;
+                }
+            }
+            if (isfull) {
+                // Clear the row
+                for (let ri = i; ri >0; ri--) {
+                    game.stack[ri] = game.stack[ri-1];
+                }
+                game.stack[0] = Array(10).fill('*'); // Fill the top row with empty cells
+            }
+        }
     }
 
     draw_stack(){
@@ -395,6 +410,8 @@ function main(timestamp){
     if(timestamp-Gcode.player_block.start_lock_time >= tetriminos.lock_time){
         for (block of Gcode.player_block.block_shape){
             game.stack[Gcode.player_block.curr_block_Y+block[1]][Gcode.player_block.curr_block_X+block[0]] = Gcode.player_block.block_type.color;
+            //check for row clears
+            Gcode.update_stack();
         }
         //stack.push([Gcode.player_block.block_type.color,[Gcode.player_block.curr_block_X,Gcode.player_block.curr_block_Y],Gcode.player_block.block_shape]);
         //console.log("pushed",timestamp);

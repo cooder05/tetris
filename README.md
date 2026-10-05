@@ -16,12 +16,14 @@ score mechanism
 networking/netcode (need to elobrate/learn)(mabye i will do three version with differen techstsck/framework for learning os i can add a lot of skills to the resume these version can be 1.node.js 2.python(django/flask) 3.c++/c#)
 
 # DOING:
-block stack clear logic
+block stack clear logic(glitchy)
 
 block queue and random block selector
 
 # ISSUES:
 need to optemise block-locking logic
+
+SRS system rotation pushes blocks up sometimes
 
 block locking feels laggy/slow need to check
 
