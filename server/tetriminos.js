@@ -47,76 +47,41 @@ class tetriminos{
     update(timestamp){
         var new_shape;
         var kick_shape;
-        var ckecks = 0;
-        var feasible = false;
+        var c1 = this.curr_block_X !== this.next_block_X;
+        var c2 = this.curr_block_Y !== this.next_block_Y;
+        var c3 = this.curr_block_Direction !== this.next_block_Direction;
         //movement check
-        /*
-        if (this.curr_block_X !== this.next_block_X){
-            ckecks++;
-            if(!this.is_colision(this.block_shape,[this.next_block_X,this.curr_block_Y],timestamp)){
+        if (c1 || c2){
+            if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_X = this.next_block_X;
-                this.start_lock_time = undefined;//reset lockdown timer
+                this.curr_block_Y = this.next_block_Y;
             }else{
                 this.next_block_X = this.curr_block_X;
-            }
-        }else if(this.curr_block_Y !== this.next_block_Y){
-            ckecks++;
-            if(!this.is_colision(this.block_shape,[this.curr_block_X,this.next_block_Y],timestamp)){
-                this.curr_block_Y = this.next_block_Y;
-                this.start_lock_time = undefined;//reset lockdown timer
-            }else{
-                this.next_block_Y = this.curr_block_Y;
+                this.next_block_Y = this.curr_block_Y;                
             }
         }
         //rotation check
-        if (this.curr_block_Direction !== this.next_block_Direction){
-            ckecks++;
-            new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
+        if (c3){
+            new_shape = this.block_shape.map(points =>[-points[1],points[0]] ); //cw rotation
             //new_shape = this.block_shape.map(points =>[points[1],-points[0]]); ccw rotation
-
+            console.log("flags-",c1,c2,c3,"-kicks",this.curr_block_X,this.curr_block_Y,"-",this.curr_block_Direction,this.next_block_Direction,"shape-",new_shape);
             //SRS check kickback
             for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
-                kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
+                kick_shape = new_shape.map(points => [points[0]-x,points[1]-y]);
+                console.log("kick",x,y);
                 if (this.is_colision(kick_shape,[this.curr_block_X,this.curr_block_Y],timestamp)){
                     continue
                 }else{
                     this.block_shape = new_shape;
-                    this.curr_block_X += x;
-                    this.curr_block_Y += y;
+                    this.curr_block_X -= x;
+                    this.curr_block_Y -= y;
                     this.curr_block_Direction = this.next_block_Direction; //update direction
-                    this.start_lock_time = undefined;//reset lockdown timer
                     break;
                 }
                 
             }
             this.next_block_Direction = this.curr_block_Direction; //reset direction if no center work
         }
-        */
-        //need to fix
-        if(this.curr_block_X !== this.next_block_X || this.curr_block_Y !== this.next_block_Y || this.curr_block_Direction !== this.next_block_Direction){
-            new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
-            for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
-                kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
-                if (this.is_colision(kick_shape,[this.next_block_X,this.next_block_Y],timestamp)){
-                    feasible = false;
-                    continue
-                }else{
-                    this.block_shape = new_shape;
-                    this.curr_block_X = this.next_block_X+x;
-                    this.curr_block_Y = this.next_block_Y+y;
-                    this.curr_block_Direction = this.next_block_Direction;
-                    this.start_lock_time = undefined;//reset lockdown timer
-                    feasible = true;
-                    break;
-                }
-            }
-            if (!feasible){
-                this.next_block_X = this.curr_block_X;
-                this.next_block_Y = this.curr_block_Y;
-                this.next_block_Direction = this.curr_block_Direction;
-            }
-
-        }   
     }
 
     
@@ -144,9 +109,9 @@ class tetriminos{
 
     }
     //drop/movement()
-    drop(){
+    drop(timestamp){
         this.next_block_Y = this.curr_block_Y+1;
-        }
+    }
 
     
     //code looks inefficent need to check if i can sreamline the calculation/check
@@ -157,23 +122,29 @@ class tetriminos{
                 if (!this.start_lock_time){
                     this.start_lock_time = timestamp;
                     this.lock_moves++;
-                    console.log("lock dodge",this.lock_moves);
-                    console.log(y+pos[1],"set",timestamp);
                 }
+                console.log("y-collision",block,shape);
                 return true;
             }else if(!(0 <= x+pos[0] && x+pos[0]<=9)){
+                console.log("x-collision",block,shape);
                 return true;
             }else{ 
                 if ((y+pos[1]>0) && game.stack[y+pos[1]][x+pos[0]] != "*"){
-                    if (!this.start_lock_time){
+                     if (!this.start_lock_time){
                         this.start_lock_time = timestamp;
                         this.lock_moves++;
-                        console.log("lock dodge",this.lock_moves);
                     }
+                    console.log("stack-collision",block,shape);
                     return true;
                 }
             }
         }
+        this.start_lock_time = undefined; //reset lockdown timer
         return false;
+    }
+
+    lock(){
+        this.start_lock_time = timestamp;
+        this.lock_moves++;
     }
 }

@@ -19,7 +19,7 @@ GAME-STATE: *BROKEN*
 
 # ISSUES:
 * need to optemise block-locking logic
-* SRS system rotation pushes blocks up sometimes
+* SRS system rotation pushes blocks up sometimes(**might be fixed as previous implementation could have been correct**)
 * block locking feels laggy/slow need to check
 
 # DONE:

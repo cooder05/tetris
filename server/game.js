@@ -161,12 +161,35 @@ function DrawGrid(){
     ctx.restore();
 }
 
+/**
+ * Creates a deterministic 32-bit pseudo-random number generator.
+ * @param {number} seed - An integer seed to initialize the generator.
+ * @returns {function} A function that outputs a float between [0, 1) when called.
+ */
+function mulberry32(seed) {
+    return function() {
+        // 1. Advance the state using a large constant and force 32-bit integer addition
+        let t = seed += 0x6D2B79F5;
+        
+        // 2. First bit-scrambling layer using 32-bit integer multiplication
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        
+        // 3. Second mixing layer to spread entropy across the bit space
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        
+        // 4. Final XOR shift, force back to a positive unsigned int, and scale to [0, 1)
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
+
+
 class game{
 
     //block stack implementation
     //need to check if it can be optmised
     static stack = Array.from({ length: 20 }, () => Array(10).fill('*'));
-    
+    bag;
+    next_que;
     player_block = new tetriminos(Shape_arr[5]);
     PLAY = false;
 
@@ -261,9 +284,9 @@ function main(timestamp){
     if(timestamp-Gcode.player_block.start_lock_time >= tetriminos.lock_time || Gcode.player_block.lock_moves >= tetriminos.max_lock_moves){
         for (block of Gcode.player_block.block_shape){
             Gcode.player_block.lock_moves = 0;
-            console.log("lock",block);
             game.stack[Gcode.player_block.curr_block_Y+block[1]][Gcode.player_block.curr_block_X+block[0]] = Gcode.player_block.block_type.color;
         }
+        console.log("block locked");
         //check for row clears
         Gcode.update_stack();
         //Gcode.player_block.block_type = S;
