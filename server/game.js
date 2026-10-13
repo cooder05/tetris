@@ -140,8 +140,8 @@ canvas.height = unit.px*20;
 
 
 const lingrad = ctx.createLinearGradient(0,0,0,canvas.height);
-lingrad.addColorStop(1, "white");
-lingrad.addColorStop(0, "transparent");
+lingrad.addColorStop(0, "white");
+lingrad.addColorStop(0.7, "transparent");
 
 function DrawGrid(){
     

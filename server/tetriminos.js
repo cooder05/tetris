@@ -47,16 +47,21 @@ class tetriminos{
     update(timestamp){
         var new_shape;
         var kick_shape;
+        var ckecks = 0;
+        var feasible = false;
         //movement check
+        /*
         if (this.curr_block_X !== this.next_block_X){
-            if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
+            ckecks++;
+            if(!this.is_colision(this.block_shape,[this.next_block_X,this.curr_block_Y],timestamp)){
                 this.curr_block_X = this.next_block_X;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
                 this.next_block_X = this.curr_block_X;
             }
         }else if(this.curr_block_Y !== this.next_block_Y){
-            if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
+            ckecks++;
+            if(!this.is_colision(this.block_shape,[this.curr_block_X,this.next_block_Y],timestamp)){
                 this.curr_block_Y = this.next_block_Y;
                 this.start_lock_time = undefined;//reset lockdown timer
             }else{
@@ -65,6 +70,7 @@ class tetriminos{
         }
         //rotation check
         if (this.curr_block_Direction !== this.next_block_Direction){
+            ckecks++;
             new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
             //new_shape = this.block_shape.map(points =>[points[1],-points[0]]); ccw rotation
 
@@ -85,7 +91,32 @@ class tetriminos{
             }
             this.next_block_Direction = this.curr_block_Direction; //reset direction if no center work
         }
-        
+        */
+        //need to fix
+        if(this.curr_block_X !== this.next_block_X || this.curr_block_Y !== this.next_block_Y || this.curr_block_Direction !== this.next_block_Direction){
+            new_shape = this.block_shape.map(points =>[-points[1],points[0]]); //cw rotation
+            for (const [x,y] of TLJSZ_OFFSET[this.curr_block_Direction][this.next_block_Direction]){
+                kick_shape = new_shape.map(points => [points[0]+x,points[1]+y]);
+                if (this.is_colision(kick_shape,[this.next_block_X,this.next_block_Y],timestamp)){
+                    feasible = false;
+                    continue
+                }else{
+                    this.block_shape = new_shape;
+                    this.curr_block_X = this.next_block_X+x;
+                    this.curr_block_Y = this.next_block_Y+y;
+                    this.curr_block_Direction = this.next_block_Direction;
+                    this.start_lock_time = undefined;//reset lockdown timer
+                    feasible = true;
+                    break;
+                }
+            }
+            if (!feasible){
+                this.next_block_X = this.curr_block_X;
+                this.next_block_Y = this.curr_block_Y;
+                this.next_block_Direction = this.curr_block_Direction;
+            }
+
+        }   
     }
 
     
@@ -94,11 +125,16 @@ class tetriminos{
         
         ctx.translate((this.curr_block_X)*unit.px,(this.curr_block_Y)*unit.px);
         ctx.fillStyle = this.block_type.color;
-        ctx.strokeStyle = this.block_type.color;
+        ctx.strokeStyle = "#ffffffe8";
+        ctx.lineWidth = 2;
         ctx.fillRect(this.block_shape[0][0]*unit.px ,this.block_shape[0][1]*unit.px, unit.px, unit.px);
+        ctx.strokeRect(this.block_shape[0][0]*unit.px ,this.block_shape[0][1]*unit.px, unit.px, unit.px);
         ctx.fillRect(this.block_shape[1][0]*unit.px ,this.block_shape[1][1]*unit.px, unit.px, unit.px);
+        ctx.strokeRect(this.block_shape[1][0]*unit.px ,this.block_shape[1][1]*unit.px, unit.px, unit.px);
         ctx.fillRect(this.block_shape[2][0]*unit.px ,this.block_shape[2][1]*unit.px, unit.px, unit.px);
+        ctx.strokeRect(this.block_shape[2][0]*unit.px ,this.block_shape[2][1]*unit.px, unit.px, unit.px);
         ctx.fillRect(this.block_shape[3][0]*unit.px ,this.block_shape[3][1]*unit.px, unit.px, unit.px);
+        ctx.strokeRect(this.block_shape[3][0]*unit.px ,this.block_shape[3][1]*unit.px, unit.px, unit.px);
         ctx.restore();
 
         ctx.save();
