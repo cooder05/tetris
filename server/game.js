@@ -109,7 +109,7 @@ Z.shape.rect(0,0,2*unit.px,unit.px);
 Z.shape.rect(unit.px,unit.px,2*unit.px,unit.px);
 
 
-const Shape_arr = [I,O,T,L,J,S,Z];
+const blocks = [I,O,T,L,J,S,Z];
 //Rotation kick-back/centers for SRS system N:north E:east S:south W:west
 //the order of elements in the list must be correct
 const Directions = {
@@ -189,8 +189,9 @@ class game{
     //need to check if it can be optmised
     static stack = Array.from({ length: 20 }, () => Array(10).fill('*'));
     bag;
+    bag_index;
     next_que;
-    player_block = new tetriminos(Shape_arr[5]);
+    player_block = new tetriminos(blocks[5]);
     PLAY = false;
 
     constructor(){
@@ -239,6 +240,9 @@ class game{
         }
     }
     //clear stack logic
+    bag_generator(){
+        
+    }    
 }
 
 Gcode = new game();
@@ -274,6 +278,7 @@ document.addEventListener("keydown",HandleKeys);
 
 const drop_tick = 500;
 let start_time;
+randomgenerator = mulberry32(123456789);
 
 function main(timestamp){
     start_time = start_time ? start_time: timestamp;
@@ -290,7 +295,7 @@ function main(timestamp){
         //check for row clears
         Gcode.update_stack();
         //Gcode.player_block.block_type = S;
-        Gcode.player_block.block_type = Shape_arr[Math.random() * Shape_arr.length | 0];
+        Gcode.player_block.block_type = blocks[randomgenerator() * blocks.length | 0];
         Gcode.player_block.reset();
         Gcode.player_block.start_lock_time = undefined;//reset lockdown timer
     }
