@@ -50,6 +50,7 @@ class tetriminos{
         var c1 = this.curr_block_X !== this.next_block_X;
         var c2 = this.curr_block_Y !== this.next_block_Y;
         var c3 = this.curr_block_Direction !== this.next_block_Direction;
+        var block_y_his = this.curr_block_Y;
         //movement check
         if (c1 || c2){
             if(!this.is_colision(this.block_shape,[this.next_block_X,this.next_block_Y],timestamp)){
@@ -82,6 +83,9 @@ class tetriminos{
             }
             this.next_block_Direction = this.curr_block_Direction; //reset direction if no center work
         }
+        if (block_y_his < this.curr_block_Y){
+            this.start_lock_time = undefined; //reset lock timer if block moved down
+        }
     }
 
     
@@ -109,7 +113,7 @@ class tetriminos{
 
     }
     //drop/movement()
-    drop(timestamp){
+    drop(){
         this.next_block_Y = this.curr_block_Y+1;
     }
 
@@ -139,7 +143,6 @@ class tetriminos{
                 }
             }
         }
-        this.start_lock_time = undefined; //reset lockdown timer
         return false;
     }
 

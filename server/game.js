@@ -231,8 +231,11 @@ class game{
             for(var j=0;j<10;j++){
                 if (game.stack[i][j] != '*'){
                     ctx.save();
+                    ctx.strokeStyle = "#ffffffe8";
+                    ctx.lineWidth = 2;
                     ctx.fillStyle = game.stack[i][j];
                     ctx.fillRect(j*unit.px,i*unit.px,unit.px,unit.px);
+                    ctx.strokeRect(j*unit.px,i*unit.px,unit.px,unit.px);
                     ctx.restore();
                 }
                 
@@ -242,7 +245,23 @@ class game{
     //clear stack logic
     bag_generator(){
         
-    }    
+    }
+    update(timestamp){
+        this.player_block.update(timestamp);
+        if(timestamp-this.player_block.start_lock_time >= tetriminos.lock_time || this.player_block.lock_moves >= tetriminos.max_lock_moves){
+            for (const block of this.player_block.block_shape){
+                this.player_block.lock_moves = 0;
+                game.stack[this.player_block.curr_block_Y+block[1]][this.player_block.curr_block_X+block[0]] = this.player_block.block_type.color;
+            }
+            //check for row clears
+            this.update_stack();
+            //this.player_block.block_type = S;
+            this.player_block.block_type = blocks[randomgenerator() * blocks.length | 0];
+            this.player_block.reset();
+            this.player_block.start_lock_time = undefined;//reset lockdown timer
+        }
+        
+    }
 }
 
 Gcode = new game();
@@ -286,24 +305,11 @@ function main(timestamp){
         Gcode.player_block.drop();
         start_time = timestamp;
     }
-    if(timestamp-Gcode.player_block.start_lock_time >= tetriminos.lock_time || Gcode.player_block.lock_moves >= tetriminos.max_lock_moves){
-        for (block of Gcode.player_block.block_shape){
-            Gcode.player_block.lock_moves = 0;
-            game.stack[Gcode.player_block.curr_block_Y+block[1]][Gcode.player_block.curr_block_X+block[0]] = Gcode.player_block.block_type.color;
-        }
-        console.log("block locked");
-        //check for row clears
-        Gcode.update_stack();
-        //Gcode.player_block.block_type = S;
-        Gcode.player_block.block_type = blocks[randomgenerator() * blocks.length | 0];
-        Gcode.player_block.reset();
-        Gcode.player_block.start_lock_time = undefined;//reset lockdown timer
-    }
     if(Gcode.PLAY){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         DrawGrid();
         Gcode.draw_stack();
-        Gcode.player_block.update(timestamp);
+        Gcode.update(timestamp);
         Gcode.player_block.draw_shape();
         reqid = window.requestAnimationFrame(main);
     }
