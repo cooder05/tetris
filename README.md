@@ -8,11 +8,12 @@ GAME-STATE: *BROKEN*
 * seperate code into different files(specifically all constants)
 * remove redundent code
 * Menu screen
-* ui/soud design
+* soud design
 * score mechanism
 * networking/netcode (need to elobrate/learn)(mabye i will do three version with differen techstsck/framework for learning os i can add a lot of skills to the resume these version can be 1.node.js 2.python(django/flask) 3.c++/c#)
 
 # DOING:
+* ui design
 * block stack clear logic(glitchy)
 * block queue and random block selector
 * modifying block update func for better logic(*game breaking*)
